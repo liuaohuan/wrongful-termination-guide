@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>劳动补偿金测算工具｜软裁员/冷暴力逼离/待岗场景</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #f4f6f8;
+            padding:24px;
+        }
+        .wrap {
+            max-width:1300px;
+            margin:0 auto;
+            display: grid;
+            grid-template-columns: 64% 34%;
+            gap:2%;
+        }
+        .card {
+            background:#ffffff;
+            border-radius:12px;
+            padding:24px;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+        }
+        h2 {
+            font-size:20px;
+            margin-bottom:16px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .tab-bar {
+            display:flex;
+            gap:12px;
+            margin-bottom:20px;
+            flex-wrap:wrap;
+        }
+        .tab-btn {
+            padding:10px 22px;
+            border:1px solid #d0d7de;
+            border-radius:6px;
+            background:#fff;
+            font-size:16px;
+            cursor:pointer;
+        }
+        .tab-btn.active {
+            background:#e8f0fe;
+            border-color:#4080ff;
+            color:#1967d2;
+            font-weight:500;
+        }
+        .form-item {
+            margin-bottom:16px;
+        }
+        label {
+            display:block;
+            margin-bottom:6px;
+            font-weight:500;
+            color:#222;
+            font-size:16px;
+        }
+        input, select {
+            width:100%;
+            padding:11px 12px;
+            border:1px solid #d0d7de;
+            border-radius:6px;
+            font-size:16px;
+        }
+        .tip-small {
+            color:#555;
+            font-size:14px;
+            margin:6px 0 20px;
+            display:flex;
+            gap:6px;
+            align-items:flex-start;
+        }
+        .form-row {
+            display:flex;
+            flex-wrap:wrap;
+            gap:16px;
+            margin-bottom:0;
+        }
+        .form-row .form-item {
+            flex:1;
+            min-width:220px;
+        }
+        .calc-btn {
+            width:100%;
+            padding:14px;
+            background:#165dff;
+            color:#fff;
+            border:none;
+            border-radius:8px;
+            font-size:18px;
+            font-weight:500;
+            cursor:pointer;
+            margin-top:8px;
+        }
+        .calc-btn:hover {
+            background:#0e4bdb;
+        }
+        .result-block {
+            background:#f0f7ff;
+            padding:18px;
+            border-radius:8px;
+            margin:18px 0;
+        }
+        .result-block h3{
+            font-size:18px;
+            margin-bottom:12px;
+        }
+        .amount-row {
+            font-size:16px;
+            margin:8px 0;
+        }
+        .amount-row strong.blue {
+            color:#165dff;
+        }
+        /* 高亮红框样式：统一字号16px */
+        .amount-highlight {
+            background:#fff0f0;
+            border:3px solid #ed2626;
+            border-radius:10px;
+            padding:16px;
+            margin:12px 0;
+            text-align:center;
+            font-size:16px;
+            font-weight:bold;
+            color:#cf1322;
+        }
+        .guide-block {
+            background:#f5f8ff;
+            border-radius:8px;
+            padding:18px;
+        }
+        .guide-block h3 {
+            margin-bottom:14px;
+            color:#194bb8;
+        }
+        .guide-step {
+            margin-bottom:14px;
+            line-height:1.65;
+        }
+        .warn-red {
+            background:#fff2f0;
+            border:1px solid #ffccc7;
+            padding:16px;
+            border-radius:8px;
+            margin:18px 0 0;
+        }
+        .red {
+            color:#cf1322;
+            font-weight:bold;
+            font-size:16px;
+        }
+        .blue {
+            color:#165dff;
+            font-weight:bold;
+            font-size:16px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <!-- 左侧主操作面板 -->
+    <div class="card left-panel">
+        <h2>选择离职的具体情形</h2>
+        <div class="tab-bar">
+            <button class="tab-btn active" data-type="negotiate">协商解除</button>
+            <button class="tab-btn" data-type="staff-resign">员工辞职</button>
+            <button class="tab-btn" data-type="unit-dismiss">单位解除</button>
+            <button class="tab-btn" data-type="contract-end">合同终止</button>
+            <button class="tab-btn" data-type="illegal-dismiss">违法解除</button>
+        </div>
+
+        <div class="form-item">
+            <label>具体情况</label>
+            <select id="caseSelect">
+                <!-- 选项由JS动态渲染 -->
+            </select>
+        </div>
+        <div class="tip-small">
+            <span>ⓘ</span>
+            <span id="caseTip"></span>
+        </div>
+
+        <div class="form-row">
+            <div class="form-item">
+                <label>入职日期</label>
+                <input type="date" id="startDate" value="2022-07-15">
+            </div>
+            <div class="form-item">
+                <label>离职日期（打开网页自动填充当日）</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-item">
+                <label>离职前12个月税前平均工资（元）</label>
+                <input type="number" id="avgSalary" value="6000">
+            </div>
+            <div class="form-item">
+                <label>待岗每月发放生活费（无待岗填0）</label>
+                <input type="number" id="waitPay" value="1200">
+            </div>
+        </div>
+
+        <button class="calc-btn" onclick="calc()">重新计算</button>
+
+        <div class="result-block" id="result"></div>
+
+        <div class="warn-red">
+            <h3>⚠️重点警示：不要主动提交自愿待岗申请书</h3>
+            <p>1. 一旦签字提交待岗申请，法律认定双方协商一致待岗；长期每月仅发放1200生活费很难认定恶意降薪。</p>
+            <p>2. 后续想要发起被迫解除主张N，仲裁败诉风险极高；长期低工资会持续拉低平均薪资，补偿金缩水。</p>
+            <p class="red">结论：任何情形拒绝签署自愿待岗、自愿离职文件！</p>
+        </div>
+    </div>
+
+    <!-- 右侧指引面板 -->
+    <div class="card right-panel">
+        <div class="guide-block" id="guideBox"></div>
+    </div>
+</div>
+
+<script>
+// 填充今日离职日期
+function getTodayStr(){
+    const d=new Date();
+    const m=String(d.getMonth()+1).padStart(2,'0');
+    const day=String(d.getDate()).padStart(2,'0');
+    return `${d.getFullYear()}-${m}-${day}`;
+}
+document.getElementById('endDate').value = getTodayStr();
+
+// 按Tab分组配置细分选项
+const groupOptions = {
+    "negotiate": [
+        {value:"neg-refuse", label:"单位提出协商解除，员工不同意"},
+        {value:"neg-accept", label:"单位提出协商解除，双方达成一致"},
+        {value:"wait-risk", label:"公司诱导签署自愿待岗申请（软裁员）"}
+    ],
+    "staff-resign": [
+        {value:"staff-vol", label:"员工个人原因主动辞职"},
+        {value:"staff-force", label:"公司存在违法行为，员工依据38条被迫解除"}
+    ],
+    "unit-dismiss": [
+        {value:"unit-legal-n1", label:"单位合法无过失性辞退（N+1）"},
+        {value:"unit-legal-n", label:"单位合法经济性裁员（N）"}
+    ],
+    "contract-end": [
+        {value:"contract-expire", label:"首次劳动合同到期终止（单位不续签 N）"},
+        {value:"contract-twice-2n", label:"连续两次固定期限合同到期，单位拒绝续签（2N）"}
+    ],
+    "illegal-dismiss": [
+        {value:"unit-illegal", label:"单位无正当理由单方违法解除（主张2N）"}
+    ]
+};
+
+// 所有场景文案映射，compType严格区分：none / N / N1 / 2N
+const sceneData = {
+    "neg-refuse":{
+        compType:"none",
+        tip:"员工有权拒绝。双方没有达成一致时，协商解除不成立，原劳动合同继续履行；不要仅因单位口头要求就自行离岗。",
+        guideTitle:"员工不同意协商后的处理顺序",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 不要签字，也不要自行离岗</strong>
+                <p>明确回复“不同意协商解除”，继续正常出勤并完整保留打卡记录。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 固定单位后续逼迫行为证据</strong>
+                <p>保存聊天记录、约谈录音、考勤、工资流水；账号/工位被收回时，书面索要正式书面通知。</p>
+            </div>
+            <div class="guide-step">
+                <strong>3. 等待公司下一步动作再评估赔偿</strong>
+                <p>单纯协商谈崩暂无补偿；公司后续出具正式辞退文书再判断补偿标准。</p>
+            </div>
+        `,
+        resultNotice:"当前状态：协商未达成一致，劳动关系继续存续，暂时不产生法定补偿金，优先在岗谈判取证。"
+    },
+    "neg-accept":{
+        compType:"N",
+        tip:"单位提出协商解除，双方书面达成一致，法定补偿标准为N，谈判可争取N+1、N+2等高于法定标准金额。",
+        guideTitle:"协商一致解除注意事项",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 协议内容必须写清楚金额、付款日期</strong>
+                <p>约定付款时间，避免签署协议后公司拖延打款。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 谨慎签署“双方再无任何劳动争议”条款</strong>
+                <p>签字后无法再次仲裁追加补偿，确认全款金额无误再签字。</p>
+            </div>
+            <div class="guide-step">
+                <strong>3. 离职原因选择【协商一致解除】</strong>
+                <p>不要写成个人原因离职，影响背调与后续求职。</p>
+            </div>
+        `,
+        resultNotice:"补偿标准：经济补偿金 N，存在议价空间，可以谈判争取高于法定标准。"
+    },
+    "staff-vol":{
+        compType:"none",
+        tip:"员工因个人原因主动提交辞职申请，法律规定无任何经济补偿金，务必不要在公司施压下签署此类离职申请。",
+        guideTitle:"个人主动离职风险提示",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 杜绝签署“个人原因离职”</strong>
+                <p>一旦提交，后续再主张补偿仲裁基本不予支持。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 公司逼离优先选择继续在岗协商</strong>
+                <p>冷暴力不等于辞退，不要冲动自行离职。</p>
+            </div>
+        `,
+        resultNotice:"⚠️个人原因主动辞职，无任何法定经济补偿金！"
+    },
+    "staff-force":{
+        compType:"N",
+        tip:"单位存在拖欠工资、不提供劳动条件等违法行为，员工书面通知被迫解除劳动关系，仅可主张N，无法主张2N。",
+        guideTitle:"被迫解除实操要点",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 证据必须充分</strong>
+                <p>仅有冷暴力、口头打压不足以支持被迫解除；必须存在克扣工资、收回工作权限等实质侵权。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 书面送达被迫解除通知书</strong>
+                <p>保留邮寄/企业微信送达凭证，不要口头离职。</p>
+            </div>
+            <div class="guide-step">
+                <strong>3. 补偿上限为N，不存在双倍赔偿2N</strong>
+            </div>
+        `,
+        resultNotice:"补偿标准：被迫解除经济补偿金 N，无法主张2N赔偿金。"
+    },
+    "unit-legal-n1":{
+        compType:"N1",
+        tip:"单位无过失性辞退（患病、不能胜任、客观情况重大变化），履行法定程序后合法解除，补偿标准N+1。",
+        guideTitle:"合法辞退N+1判断要点",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 核查解除理由与程序是否合规</strong>
+                <p>不能胜任岗位必须经过培训或者调岗，直接辞退属于违法。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 核对书面解除通知书盖章内容</strong>
+            </div>
+        `,
+        resultNotice:"补偿标准：合法无过失性辞退，N+1。"
+    },
+    "unit-legal-n":{
+        compType:"N",
+        tip:"单位合规经济性裁员，履行报备等法定流程，合法解除劳动合同，补偿标准N。",
+        guideTitle:"经济性裁员核查要点",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 核查企业是否履行劳动部门报备程序</strong>
+            </div>
+            <div class="guide-step">
+                <strong>2. 优先协商补偿金额，确认裁员方案合法性</strong>
+            </div>
+        `,
+        resultNotice:"补偿标准：合法经济性裁员，经济补偿金 N。"
+    },
+    "contract-expire":{
+        compType:"N",
+        tip:"首次劳动合同到期，单位不续签或者降低条件续签员工拒签，应当支付N；员工主动不续签无补偿。",
+        guideTitle:"首次合同到期离职处理顺序",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 留意单位续签通知时间</strong>
+                <p>到期前确认续签薪资条件。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 单位不续签，依法主张N补偿金</strong>
+            </div>
+        `,
+        resultNotice:"补偿标准：首次合同到期单位不续签，经济补偿金 N；员工主动不续签无补偿。"
+    },
+    "contract-twice-2n":{
+        compType:"2N",
+        tip:"已连续订立二次固定期限劳动合同，到期员工提出续签无固定期限合同，单位单方拒绝续签，属于违法终止，可主张2N赔偿金（各地裁判口径略有差异）。",
+        guideTitle:"两次固定期限合同到期维权要点",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 合同到期前书面明确提出要求订立无固定期限劳动合同，并留存送达证据</strong>
+            </div>
+            <div class="guide-step">
+                <strong>2. 注意区域裁判差异：部分地区仍支持N，提前查询当地仲裁口径</strong>
+            </div>
+            <div class="guide-step">
+                <strong>3. 不要签署自愿终止/到期不续签确认书，避免丧失2N主张基础</strong>
+            </div>
+        `,
+        resultNotice:"补偿标准：连续两次固定期限合同到期、员工要求续签单位拒签，主张赔偿金 2N。"
+    },
+    "unit-illegal":{
+        compType:"2N",
+        tip:"单位无合法理由单方面出具解除通知开除员工，属于违法解除劳动合同，可主张2N赔偿金。",
+        guideTitle:"主张2N赔偿金必备条件",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 拿到加盖公章书面解除通知书</strong>
+                <p>只有口头辞退，证据极易不足。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 不存在员工严重违纪、合法裁员等正当理由</strong>
+            </div>
+            <div class="guide-step">
+                <strong>3. 区分关键点：被迫解除只能拿N，只有单位主动违法开除才是2N</strong>
+            </div>
+        `,
+        resultNotice:"补偿标准：违法解除劳动合同，赔偿金标准 2N。"
+    },
+    "wait-risk":{
+        compType:"none",
+        tip:"不要主动提交自愿待岗申请！自愿申请待岗会被认定双方协商一致，后续难以认定单位逼迫离职，平均工资持续被压低。",
+        guideTitle:"待岗申请重大风险提醒",
+        guideText:`
+            <div class="guide-step">
+                <strong>1. 坚决拒绝签署自愿待岗申请书</strong>
+                <p>一旦签字，每月1200生活费具备合同约束力。</p>
+            </div>
+            <div class="guide-step">
+                <strong>2. 如果单位单方强制待岗，书面提出异议并留存记录</strong>
+            </div>
+            <div class="guide-step">
+                <strong>3. 长期低工资直接拉低离职前12个月平均工资，补偿金缩水</strong>
+            </div>
+        `,
+        resultNotice:"风险预警：自愿待岗会大幅降低后续可拿到的补偿金，尽量拒绝。"
+    }
+};
+
+const tabBtns = document.querySelectorAll('.tab-btn');
+const caseSelect = document.getElementById('caseSelect');
+const caseTip = document.getElementById('caseTip');
+const guideBox = document.getElementById('guideBox');
+
+let activeTabKey = "negotiate";
+
+// 根据当前tab渲染下拉选项
+function renderSelectOptions(tabKey){
+    const optList = groupOptions[tabKey];
+    caseSelect.innerHTML = "";
+    optList.forEach(opt=>{
+        const optionDom = document.createElement("option");
+        optionDom.value = opt.value;
+        optionDom.innerText = opt.label;
+        caseSelect.appendChild(optionDom);
+    })
+    refreshScene();
+    calc(); //切换选项自动重算，防止缓存旧结果
+}
+
+// Tab点击切换
+tabBtns.forEach(btn=>{
+    btn.onclick = function(){
+        const targetTab = this.dataset.type;
+        tabBtns.forEach(b=>b.classList.remove('active'));
+        this.classList.add('active');
+        activeTabKey = targetTab;
+        renderSelectOptions(activeTabKey);
+    }
+})
+
+// 下拉切换触发刷新+自动计算
+caseSelect.onchange = function(){
+    refreshScene();
+    calc();
+}
+
+// 刷新提示、右侧指引
+function refreshScene(){
+    const val = caseSelect.value;
+    const data = sceneData[val];
+    caseTip.innerText = data.tip;
+    guideBox.innerHTML = `<h3>${data.guideTitle}</h3>${data.guideText}`;
+}
+
+// 计算逻辑
+function calc(){
+    const sVal=document.getElementById('startDate').value;
+    const eVal=document.getElementById('endDate').value;
+    const avg=Number(document.getElementById('avgSalary').value);
+    const waitPay=Number(document.getElementById('waitPay').value);
+    const caseType=caseSelect.value;
+    const data = sceneData[caseType];
+    const compType = data.compType;
+
+    const start=new Date(sVal);
+    const end=new Date(eVal);
+
+    let yearDiff=end.getFullYear()-start.getFullYear();
+    let monthDiff=end.getMonth()-start.getMonth();
+    if(monthDiff<0){
+        yearDiff--;
+        monthDiff+=12;
+    }
+    let nNum;
+    if(monthDiff >=6){
+        nNum=yearDiff+1;
+    }else if(monthDiff>0){
+        nNum=yearDiff+0.5;
+    }else{
+        nNum=yearDiff;
+    }
+
+    let resultHtml = `<h3>测算结果</h3>`;
+
+    if(compType === "N"){
+        const amount = (nNum * avg).toFixed(2);
+        resultHtml += `
+        <div class="amount-highlight">
+            经济补偿金（N）：${amount} 元
+        </div>`;
+    }else if(compType === "N1"){
+        const amount = (nNum * avg + avg).toFixed(2);
+        resultHtml += `
+        <div class="amount-highlight">
+            N+1补偿总额：${amount} 元
+        </div>`;
+    }else if(compType === "2N"){
+        const amount = (nNum * avg *2).toFixed(2);
+        resultHtml += `
+        <div class="amount-highlight">
+            违法终止/解除赔偿金（2N）：${amount} 元
+        </div>`;
+    }else{
+        // none无补偿场景：工龄、月薪正常文字，仅提示语单独放进红框
+        resultHtml += `
+        <div class="amount-row">工龄折算补偿系数 N = <strong class="blue">${nNum}</strong> 个月</div>
+        <div class="amount-row">月平均工资：${avg} 元</div>
+        <div class="amount-highlight">
+            本情形无法律规定的经济补偿金/赔偿金
+        </div>`;
+    }
+
+    resultHtml += `<br><p class="blue">当前场景结论：${data.resultNotice}</p>`;
+
+    if(waitPay>0){
+        resultHtml += `<p class="red">⚠️长期每月仅发放${waitPay}元待岗生活费，持续12个月会拉低平均薪资，补偿金显著减少！</p>`;
+    }
+    document.getElementById('result').innerHTML=resultHtml;
+}
+
+// 页面初始化
+renderSelectOptions(activeTabKey);
+calc();
+</script>
+</body>
+</html>
