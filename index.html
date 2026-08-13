@@ -2,171 +2,544 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>劳动补偿金测算工具｜软裁员/冷暴力逼离/待岗场景</title>
     <style>
+        /* ========== ZNNZ.NET 暗黑科技风格 ========== */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: system-ui, "Microsoft Yahei", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --bg-black: #000000;
+            --bg-card: #0a0a0a;
+            --bg-input: #141414;
+            --bg-input-hover: #1a1a1a;
+            --border-dark: #222222;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --brand-green: #00e676;
+            --brand-green-dim: rgba(0, 230, 118, 0.15);
+            --brand-orange: #ff6b35;
+            --brand-purple: #7c3aed;
+            --danger-red: #ff4444;
+            --danger-red-dim: rgba(255, 68, 68, 0.1);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.2s ease;
+        }
+        html {
+            -webkit-text-size-adjust: 100%;
         }
         body {
-            background-color: #f4f6f8;
-            padding:24px;
+            font-family: "SF Mono", "Monaco", "Consolas", "Menlo", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", monospace;
+            background-color: var(--bg-black);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+
+        /* 背景装饰圆环 */
+        .bg-ring {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.03);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-ring.r1 { width: 80vmin; height: 80vmin; }
+        .bg-ring.r2 { width: 100vmin; height: 100vmin; border-color: rgba(0,230,118,0.04); }
+        .bg-ring.r3 { width: 60vmin; height: 60vmin; border-color: rgba(255,107,53,0.04); }
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120vmin;
+            height: 120vmin;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,230,118,0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 顶部标题 */
+        .page-header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 56px 24px 36px;
+        }
+        .page-title {
+            font-size: clamp(36px, 7vw, 60px);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+        .page-title .green { color: var(--brand-green); }
+        .page-title .orange { color: var(--brand-orange); }
+        .page-subtitle {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: var(--text-secondary);
+            margin-top: 14px;
+            font-weight: 500;
+        }
+
+        /* 主容器 */
         .wrap {
-            max-width:1300px;
-            margin:0 auto;
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px 80px;
             display: grid;
-            grid-template-columns: 64% 34%;
-            gap:2%;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+            align-items: start;
         }
+
+        /* 卡片 */
         .card {
-            background:#ffffff;
-            border-radius:12px;
-            padding:24px;
-            box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+            background: var(--bg-card);
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            transition: var(--transition);
         }
+        .card:hover {
+            border-color: rgba(0, 230, 118, 0.2);
+        }
+
         h2 {
-            font-size:20px;
-            margin-bottom:16px;
-            display:flex;
-            align-items:center;
-            gap:8px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--brand-green);
+        }
+
+        /* Tab 标签栏 */
         .tab-bar {
-            display:flex;
-            gap:12px;
-            margin-bottom:20px;
-            flex-wrap:wrap;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
         }
         .tab-btn {
-            padding:10px 22px;
-            border:1px solid #d0d7de;
-            border-radius:6px;
-            background:#fff;
-            font-size:16px;
-            cursor:pointer;
+            padding: 9px 18px;
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-sm);
+            background: var(--bg-input);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+        .tab-btn:hover {
+            border-color: rgba(0, 230, 118, 0.4);
+            color: var(--brand-green);
+        }
+        .tab-btn:active {
+            transform: scale(0.97);
         }
         .tab-btn.active {
-            background:#e8f0fe;
-            border-color:#4080ff;
-            color:#1967d2;
-            font-weight:500;
+            background: var(--brand-green-dim);
+            border-color: var(--brand-green);
+            color: var(--brand-green);
+            font-weight: 600;
         }
+
+        /* 表单 */
         .form-item {
-            margin-bottom:16px;
+            margin-bottom: 16px;
         }
         label {
-            display:block;
-            margin-bottom:6px;
-            font-weight:500;
-            color:#222;
-            font-size:16px;
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        .input-wrap {
+            position: relative;
+        }
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: var(--brand-green);
+            pointer-events: none;
         }
         input, select {
-            width:100%;
-            padding:11px 12px;
-            border:1px solid #d0d7de;
-            border-radius:6px;
-            font-size:16px;
+            width: 100%;
+            padding: 12px 14px 12px 40px;
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-family: inherit;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: var(--transition);
+            appearance: none;
+            -webkit-appearance: none;
         }
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23666' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--brand-green);
+            background: var(--bg-input-hover);
+            box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.1);
+        }
+        input[type="date"] {
+            cursor: pointer;
+            color-scheme: dark;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         .tip-small {
-            color:#555;
-            font-size:14px;
-            margin:6px 0 20px;
-            display:flex;
-            gap:6px;
-            align-items:flex-start;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin: 4px 0 20px;
+            padding: 12px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-md);
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            line-height: 1.5;
         }
+        .tip-small span:first-child {
+            color: var(--brand-green);
+            flex-shrink: 0;
+        }
+
         .form-row {
-            display:flex;
-            flex-wrap:wrap;
-            gap:16px;
-            margin-bottom:0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 0;
         }
-        .form-row .form-item {
-            flex:1;
-            min-width:220px;
-        }
+
+        /* 主按钮 */
         .calc-btn {
-            width:100%;
-            padding:14px;
-            background:#165dff;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            font-size:18px;
-            font-weight:500;
-            cursor:pointer;
-            margin-top:8px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--brand-purple) 0%, #9333ea 100%);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: var(--transition);
         }
         .calc-btn:hover {
-            background:#0e4bdb;
+            filter: brightness(1.15);
+            transform: translateY(-1px);
         }
+        .calc-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 结果区块 */
         .result-block {
-            background:#f0f7ff;
-            padding:18px;
-            border-radius:8px;
-            margin:18px 0;
+            background: var(--bg-input);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            margin: 20px 0;
+            border: 1px solid var(--border-dark);
         }
-        .result-block h3{
-            font-size:18px;
-            margin-bottom:12px;
+        .result-block h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .result-block h3::before {
+            content: '●';
+            color: var(--brand-green);
+            font-size: 10px;
         }
         .amount-row {
-            font-size:16px;
-            margin:8px 0;
+            font-size: 14px;
+            margin: 8px 0;
+            color: var(--text-secondary);
         }
         .amount-row strong.blue {
-            color:#165dff;
+            color: var(--brand-green);
+            font-weight: 600;
         }
-        /* 高亮红框样式：统一字号16px */
+
         .amount-highlight {
-            background:#fff0f0;
-            border:3px solid #ed2626;
-            border-radius:10px;
-            padding:16px;
-            margin:12px 0;
-            text-align:center;
-            font-size:16px;
-            font-weight:bold;
-            color:#cf1322;
+            background: linear-gradient(135deg, rgba(0,230,118,0.12) 0%, rgba(0,230,118,0.05) 100%);
+            border: 1px solid var(--brand-green);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin: 14px 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--brand-green);
+            letter-spacing: 0.5px;
         }
+
+        .result-block .blue {
+            color: var(--brand-green);
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+        .result-block .red {
+            color: var(--danger-red);
+            font-weight: 600;
+            font-size: 13px;
+            display: block;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* 右侧指引面板 */
         .guide-block {
-            background:#f5f8ff;
-            border-radius:8px;
-            padding:18px;
+            background: var(--bg-input);
+            border-radius: var(--radius-md);
+            padding: 22px;
+            border: 1px solid var(--border-dark);
         }
         .guide-block h3 {
-            margin-bottom:14px;
-            color:#194bb8;
+            margin-bottom: 16px;
+            color: var(--brand-orange);
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .guide-block h3::before {
+            content: '●';
+            color: var(--brand-orange);
+            font-size: 10px;
         }
         .guide-step {
-            margin-bottom:14px;
-            line-height:1.65;
+            margin-bottom: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            font-size: 13px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-dark);
         }
+        .guide-step:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .guide-step strong {
+            color: var(--text-primary);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .guide-step p {
+            margin-top: 2px;
+        }
+
+        /* 红色警示区块 */
         .warn-red {
-            background:#fff2f0;
-            border:1px solid #ffccc7;
-            padding:16px;
-            border-radius:8px;
-            margin:18px 0 0;
+            background: var(--danger-red-dim);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            margin: 20px 0 0;
+        }
+        .warn-red h3 {
+            color: var(--danger-red);
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .warn-red p {
+            color: var(--text-secondary);
+            margin: 5px 0;
+            font-size: 13px;
+            line-height: 1.6;
         }
         .red {
-            color:#cf1322;
-            font-weight:bold;
-            font-size:16px;
+            color: var(--danger-red);
+            font-weight: 600;
+            font-size: 14px;
         }
         .blue {
-            color:#165dff;
-            font-weight:bold;
-            font-size:16px;
+            color: var(--brand-green);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* 响应式：平板 */
+        @media (max-width: 900px) {
+            .wrap {
+                grid-template-columns: 1fr;
+                max-width: 640px;
+            }
+            .right-panel {
+                order: -1;
+            }
+        }
+
+        /* 响应式：手机 */
+        @media (max-width: 600px) {
+            .page-header {
+                padding: 40px 16px 24px;
+            }
+            .page-title {
+                font-size: 32px;
+            }
+            .page-subtitle {
+                font-size: 14px;
+            }
+            .wrap {
+                padding: 0 14px 60px;
+                gap: 14px;
+            }
+            .card {
+                padding: 20px 16px;
+                border-radius: 14px;
+            }
+            h2 {
+                font-size: 16px;
+            }
+            .tab-bar {
+                gap: 6px;
+            }
+            .tab-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            .form-item {
+                margin-bottom: 14px;
+            }
+            label {
+                font-size: 12px;
+            }
+            input, select {
+                padding: 11px 12px 11px 36px;
+                font-size: 16px;
+            }
+            .input-icon {
+                left: 12px;
+                font-size: 13px;
+            }
+            .tip-small {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+            .calc-btn {
+                padding: 13px;
+                font-size: 15px;
+            }
+            .result-block {
+                padding: 16px;
+            }
+            .amount-highlight {
+                font-size: 16px;
+                padding: 16px;
+            }
+            .guide-block {
+                padding: 16px;
+            }
+            .guide-block h3 {
+                font-size: 15px;
+            }
+            .guide-step {
+                font-size: 12px;
+            }
+            .warn-red {
+                padding: 16px;
+            }
+            .warn-red h3 {
+                font-size: 14px;
+            }
+            .warn-red p {
+                font-size: 12px;
+            }
+        }
+
+        /* 安全区域适配 */
+        @supports (padding: max(0px)) {
+            .page-header {
+                padding-top: max(56px, env(safe-area-inset-top) + 40px);
+            }
+            .wrap {
+                padding-bottom: max(80px, env(safe-area-inset-bottom) + 60px);
+            }
+        }
+
+        /* 减弱动效 */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 <body>
+
+<!-- 背景装饰 -->
+<div class="bg-glow"></div>
+<div class="bg-ring r1"></div>
+<div class="bg-ring r2"></div>
+<div class="bg-ring r3"></div>
+
+<!-- 页面标题 -->
+<header class="page-header">
+    <h1 class="page-title">
+        <span class="green">劳动补偿</span><span class="orange">金测算</span>
+    </h1>
+    <p class="page-subtitle">软裁员 · 冷暴力逼离 · 待岗场景</p>
+</header>
+
 <div class="wrap">
     <!-- 左侧主操作面板 -->
     <div class="card left-panel">
@@ -178,43 +551,53 @@
             <button class="tab-btn" data-type="contract-end">合同终止</button>
             <button class="tab-btn" data-type="illegal-dismiss">违法解除</button>
         </div>
-
         <div class="form-item">
             <label>具体情况</label>
-            <select id="caseSelect">
-                <!-- 选项由JS动态渲染 -->
-            </select>
+            <div class="input-wrap">
+                <span class="input-icon">⚙</span>
+                <select id="caseSelect">
+                    <!-- 选项由JS动态渲染 -->
+                </select>
+            </div>
         </div>
         <div class="tip-small">
             <span>ⓘ</span>
             <span id="caseTip"></span>
         </div>
-
         <div class="form-row">
             <div class="form-item">
                 <label>入职日期</label>
-                <input type="date" id="startDate" value="2022-07-15">
+                <div class="input-wrap">
+                    <span class="input-icon">📅</span>
+                    <input type="date" id="startDate" value="2022-07-15">
+                </div>
             </div>
             <div class="form-item">
                 <label>离职日期（打开网页自动填充当日）</label>
-                <input type="date" id="endDate">
+                <div class="input-wrap">
+                    <span class="input-icon">📅</span>
+                    <input type="date" id="endDate">
+                </div>
             </div>
         </div>
         <div class="form-row">
             <div class="form-item">
                 <label>离职前12个月税前平均工资（元）</label>
-                <input type="number" id="avgSalary" value="6000">
+                <div class="input-wrap">
+                    <span class="input-icon">$</span>
+                    <input type="number" id="avgSalary" value="6000">
+                </div>
             </div>
             <div class="form-item">
                 <label>待岗每月发放生活费（无待岗填0）</label>
-                <input type="number" id="waitPay" value="1200">
+                <div class="input-wrap">
+                    <span class="input-icon">$</span>
+                    <input type="number" id="waitPay" value="1200">
+                </div>
             </div>
         </div>
-
         <button class="calc-btn" onclick="calc()">重新计算</button>
-
         <div class="result-block" id="result"></div>
-
         <div class="warn-red">
             <h3>⚠️重点警示：不要主动提交自愿待岗申请书</h3>
             <p>1. 一旦签字提交待岗申请，法律认定双方协商一致待岗；长期每月仅发放1200生活费很难认定恶意降薪。</p>
@@ -263,7 +646,7 @@ const groupOptions = {
     ]
 };
 
-// 所有场景文案映射，compType严格区分：none / N / N1 / 2N
+// 所有场景文案映射
 const sceneData = {
     "neg-refuse":{
         compType:"none",
@@ -272,7 +655,7 @@ const sceneData = {
         guideText:`
             <div class="guide-step">
                 <strong>1. 不要签字，也不要自行离岗</strong>
-                <p>明确回复“不同意协商解除”，继续正常出勤并完整保留打卡记录。</p>
+                <p>明确回复"不同意协商解除"，继续正常出勤并完整保留打卡记录。</p>
             </div>
             <div class="guide-step">
                 <strong>2. 固定单位后续逼迫行为证据</strong>
@@ -295,7 +678,7 @@ const sceneData = {
                 <p>约定付款时间，避免签署协议后公司拖延打款。</p>
             </div>
             <div class="guide-step">
-                <strong>2. 谨慎签署“双方再无任何劳动争议”条款</strong>
+                <strong>2. 谨慎签署"双方再无任何劳动争议"条款</strong>
                 <p>签字后无法再次仲裁追加补偿，确认全款金额无误再签字。</p>
             </div>
             <div class="guide-step">
@@ -311,7 +694,7 @@ const sceneData = {
         guideTitle:"个人主动离职风险提示",
         guideText:`
             <div class="guide-step">
-                <strong>1. 杜绝签署“个人原因离职”</strong>
+                <strong>1. 杜绝签署"个人原因离职"</strong>
                 <p>一旦提交，后续再主张补偿仲裁基本不予支持。</p>
             </div>
             <div class="guide-step">
@@ -443,10 +826,8 @@ const tabBtns = document.querySelectorAll('.tab-btn');
 const caseSelect = document.getElementById('caseSelect');
 const caseTip = document.getElementById('caseTip');
 const guideBox = document.getElementById('guideBox');
-
 let activeTabKey = "negotiate";
 
-// 根据当前tab渲染下拉选项
 function renderSelectOptions(tabKey){
     const optList = groupOptions[tabKey];
     caseSelect.innerHTML = "";
@@ -457,10 +838,9 @@ function renderSelectOptions(tabKey){
         caseSelect.appendChild(optionDom);
     })
     refreshScene();
-    calc(); //切换选项自动重算，防止缓存旧结果
+    calc();
 }
 
-// Tab点击切换
 tabBtns.forEach(btn=>{
     btn.onclick = function(){
         const targetTab = this.dataset.type;
@@ -471,13 +851,11 @@ tabBtns.forEach(btn=>{
     }
 })
 
-// 下拉切换触发刷新+自动计算
 caseSelect.onchange = function(){
     refreshScene();
     calc();
 }
 
-// 刷新提示、右侧指引
 function refreshScene(){
     const val = caseSelect.value;
     const data = sceneData[val];
@@ -485,7 +863,6 @@ function refreshScene(){
     guideBox.innerHTML = `<h3>${data.guideTitle}</h3>${data.guideText}`;
 }
 
-// 计算逻辑
 function calc(){
     const sVal=document.getElementById('startDate').value;
     const eVal=document.getElementById('endDate').value;
@@ -494,10 +871,8 @@ function calc(){
     const caseType=caseSelect.value;
     const data = sceneData[caseType];
     const compType = data.compType;
-
     const start=new Date(sVal);
     const end=new Date(eVal);
-
     let yearDiff=end.getFullYear()-start.getFullYear();
     let monthDiff=end.getMonth()-start.getMonth();
     if(monthDiff<0){
@@ -512,9 +887,7 @@ function calc(){
     }else{
         nNum=yearDiff;
     }
-
     let resultHtml = `<h3>测算结果</h3>`;
-
     if(compType === "N"){
         const amount = (nNum * avg).toFixed(2);
         resultHtml += `
@@ -534,7 +907,6 @@ function calc(){
             违法终止/解除赔偿金（2N）：${amount} 元
         </div>`;
     }else{
-        // none无补偿场景：工龄、月薪正常文字，仅提示语单独放进红框
         resultHtml += `
         <div class="amount-row">工龄折算补偿系数 N = <strong class="blue">${nNum}</strong> 个月</div>
         <div class="amount-row">月平均工资：${avg} 元</div>
@@ -542,16 +914,13 @@ function calc(){
             本情形无法律规定的经济补偿金/赔偿金
         </div>`;
     }
-
-    resultHtml += `<br><p class="blue">当前场景结论：${data.resultNotice}</p>`;
-
+    resultHtml += `<p class="blue">当前场景结论：${data.resultNotice}</p>`;
     if(waitPay>0){
         resultHtml += `<p class="red">⚠️长期每月仅发放${waitPay}元待岗生活费，持续12个月会拉低平均薪资，补偿金显著减少！</p>`;
     }
     document.getElementById('result').innerHTML=resultHtml;
 }
 
-// 页面初始化
 renderSelectOptions(activeTabKey);
 calc();
 </script>
